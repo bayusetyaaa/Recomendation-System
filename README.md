@@ -183,3 +183,71 @@ Pada tahap ini, dibuat sebuah fungsi bernama movie_recommendations() yang bertuj
 Menampilkan 5 rekomendasi film yang paling mirip dengan "Good Time (2017)" berdasarkan kemiripan genre menggunakan pendekatan TF-IDF dan cosine similarity.
 
 ## Model Development dengan Collaborative Filtering
+### Data Preparation
+Dalam tahap awal pemrosesan data untuk sistem rekomendasi berbasis pembelajaran mesin atau deep learning, dilakukan encoding terhadap kolom **userId** dan **movieId** menjadi bentuk numerik. Hal ini diperlukan karena sebagian besar model hanya menerima input dalam format numerik atau tensor.
+
+
+1. Mengonversi userId ke dalam list unik dan Encoding userId ke indeks numerik
+
+   ![image](https://github.com/user-attachments/assets/64d28e42-893d-4264-a8c4-0a1d9dcb1db8)
+
+   * Fungsi df['userId'].unique().tolist() digunakan untuk mengambil semua userId tanpa duplikasi.
+   * Hasilnya adalah 610 user unik.
+   * Dibuat dictionary user_to_user_encoded untuk mengubah userId menjadi angka (0–609).
+   * Sebaliknya, user_encoded_to_user menyimpan mapping balik (dari angka ke userId) untuk interpretasi hasil.
+
+2. Proses serupa dilakukan untuk movieId
+
+   ![image](https://github.com/user-attachments/assets/09fab7ad-afbf-4b11-89ee-c5401bf13a81)
+
+   * Diperoleh list movie_ids berisi ID film unik.
+   * Dibuat dua dictionary: movie_to_movie_encoded dan movie_encoded_to_movie untuk encoding dan decoding.
+
+4. Mapping hasil encoding ke dataframe utama
+
+   ![image](https://github.com/user-attachments/assets/cb870c6e-afad-4185-8b2a-8998433c280b)
+
+   * Kolom baru user dan movie ditambahkan ke df, masing-masing berisi versi encoded dari userId dan movieId.
+
+### Membagi Data untuk Training dan Validasi
+
+![image](https://github.com/user-attachments/assets/d2f35768-c9a0-4938-95d3-4fa50fcc98b8)
+
+Pada tahap ini, data diacak terlebih dahulu menggunakan fungsi sample(frac=1, random_state=42) untuk mengacak seluruh baris dalam DataFrame secara acak namun tetap reproducible, sehingga hasil pengacakan akan selalu sama jika kode dijalankan ulang. Selanjutnya, dibuat variabel input x yang berisi pasangan nilai numerik dari kolom user dan movie, hasil encoding sebelumnya. Sedangkan variabel target y dibuat dengan menormalisasi nilai rating ke dalam rentang 0 hingga 1 menggunakan metode *min-max normalization*. Proses ini penting agar skala rating sesuai untuk digunakan dalam model pembelajaran mesin. Setelah itu, data dibagi menjadi dua bagian, yaitu 80% untuk data latih (x_train, y_train) dan 20% untuk data validasi (x_val, y_val). Pembagian ini dilakukan dengan slicing berdasarkan jumlah baris dalam data, agar model bisa dilatih menggunakan satu bagian data dan diuji performanya pada data yang tidak dilihat selama pelatihan.
+
+### Evaluasi
+Model rekomendasi dibangun menggunakan kelas RecommenderNet, turunan dari tf.keras.Model. Tujuan utama dari arsitektur ini adalah mempelajari hubungan laten antara pengguna dan film dalam bentuk vektor berdimensi rendah yang dapat dihitung kedekatannya (similarity). Representasi ini diperoleh melalui **embedding layer**, di mana setiap pengguna dan film dipetakan ke dalam ruang fitur tersembunyi (latent space) dengan dimensi tertentu, dalam hal ini 50.
+
+Model memiliki empat layer embedding, yaitu dua untuk representasi vektor (user_embedding, movie_embedding) dan dua lainnya untuk mengakomodasi nilai **bias** tiap entitas (user_bias, movie_bias). Bias ini penting untuk menangkap kecenderungan umum dari pengguna atau film tertentu, seperti pengguna yang cenderung memberi rating tinggi, atau film yang umumnya disukai.
+
+Saat model dijalankan (method call()), pasangan [user_id, movie_id] digunakan untuk mengekstrak embedding masing-masing entitas. Embedding user dan film kemudian dikalikan dengan operasi **dot product** menggunakan tf.tensordot(), yang menghasilkan skor mentah interaksi antara keduanya. Skor ini kemudian disesuaikan dengan menambahkan nilai bias dari masing-masing sisi.
+
+Akhirnya, skor tersebut dilewatkan melalui fungsi aktivasi **sigmoid**, yang akan memetakan hasilnya ke rentang [0, 1]. Nilai inilah yang akan ditafsirkan sebagai kemungkinan bahwa pengguna akan menyukai film tersebut. Skala ini juga cocok karena sebelumnya data rating telah dinormalisasi ke dalam rentang yang sama.
+
+Setelah arsitektur selesai dibuat, model dikompilasi dengan konfigurasi sebagai berikut:
+
+- **Loss function**: BinaryCrossentropy. Digunakan untuk mengukur seberapa jauh prediksi dari nilai aktual dalam bentuk probabilistik. Karena skor dipetakan ke [0,1], fungsi ini cocok digunakan dalam konteks prediksi preferensi.
+- **Optimizer**: Adam dengan learning rate 0.001. Optimizer ini dipilih karena kemampuannya yang adaptif dalam mengatur laju pembelajaran, serta kestabilannya dalam konvergensi pada data yang memiliki noise atau sparcity tinggi seperti sistem rekomendasi.
+- **Metrik evaluasi**: RootMeanSquaredError (RMSE). RMSE menghitung rata-rata kesalahan prediksi dan memberikan penalti lebih besar pada kesalahan besar. Cocok digunakan untuk sistem yang memprediksi angka kontinyu seperti rating.
+
+Model kemudian dilatih selama **25 epoch** dengan **batch size 32**, artinya dalam setiap iterasi model memproses 32 sampel sekaligus. Pengaturan ini memberikan efisiensi yang baik antara kecepatan komputasi dan kualitas pembelajaran. Epoch sebanyak 25 kali dianggap cukup untuk membiarkan model menemukan pola dalam data tanpa terlalu lama dilatih, yang bisa menimbulkan **overfitting**.
+
+Selama proses pelatihan, performa model pada data latih dan data validasi dievaluasi setiap epoch menggunakan RMSE. Nilai RMSE yang menurun secara stabil pada kedua dataset menunjukkan bahwa model belajar dengan baik. Visualisasi hasil pelatihan (plot RMSE) memberikan gambaran apakah model mengalami penurunan error secara bertahap, serta apakah terdapat jarak yang besar antara data train dan validation yang bisa mengindikasikan overfitting.
+
+![download (6)](https://github.com/user-attachments/assets/2af791a9-5982-4237-8f36-fd2c8175f507)
+
+Grafik menunjukkan bahwa nilai RMSE pada data training terus menurun seiring bertambahnya epoch, sementara nilai RMSE pada data validation cenderung stabil setelah beberapa epoch. Ini menandakan model berhasil mempelajari pola dari data.
+
+### Mendapatkan Rekomendasi Film
+
+Pada tahap ini, dilakukan proses pembuatan rekomendasi film untuk satu pengguna secara acak dengan terlebih dahulu mengidentifikasi film yang **belum ditonton** oleh pengguna tersebut. Langkah pertama dimulai dengan memilih satu `userId` secara acak dari dataset `df`, kemudian sistem mencari daftar `movieId` yang **belum pernah ditonton** oleh pengguna tersebut dengan menggunakan operator bitwise `~` untuk mengecualikan film yang sudah pernah dinilai. Setelah itu, hanya ID film yang sudah melalui proses encoding sebelumnya yang dipertahankan agar sesuai dengan struktur input model. Setiap `movieId` yang belum ditonton tersebut kemudian dipasangkan dengan `userId` yang telah di-encode, membentuk array dua kolom (`user`, `movie`) untuk prediksi. Model yang sudah dilatih sebelumnya digunakan untuk memprediksi rating dari semua kombinasi user-movie ini, lalu hasil prediksi diurutkan untuk mendapatkan 10 film dengan skor prediksi tertinggi. Sebelum menampilkan rekomendasi, sistem juga menampilkan 5 film dengan rating tertinggi yang sudah pernah ditonton oleh user tersebut sebagai referensi. Terakhir, sistem mencetak daftar 10 rekomendasi film berdasarkan prediksi skor tertinggi, lengkap dengan judul dan genre, dari dataframe `movie_df`. Proses ini mencerminkan pendekatan sistem rekomendasi berbasis prediksi skor individual untuk item yang belum dilihat pengguna.
+
+![image](https://github.com/user-attachments/assets/407db68f-3682-43b8-9650-d2346e7a822c)
+
+Berikut kesimpulan akhir berdasarkan output rekomendasi untuk user dengan userId 376:
+
+Dari hasil implementasi sistem rekomendasi menggunakan pendekatan **Collaborative Filtering**, kita berhasil memberikan rekomendasi yang relevan dan sesuai dengan preferensi pengguna. Dalam contoh ini, sistem menghasilkan rekomendasi untuk pengguna dengan userId 376, yang sebelumnya memberikan rating tinggi pada film bergenre *Sci-Fi*, *Drama*, *Thriller*, dan *War*, seperti **Twelve Monkeys**, **Apollo 13**, dan **Terminator 2**.
+
+Rekomendasi yang diberikan pun menunjukkan konsistensi dengan pola preferensi pengguna. Film seperti **Band of Brothers**, **Paths of Glory**, dan **The Stunt Man** memiliki elemen genre yang selaras, terutama *Drama*, *War*, dan *Thriller*. Selain itu, sistem juga menyarankan beberapa film dari genre lain seperti *Comedy* dan *Romance*, menunjukkan bahwa model mampu mengenali kemungkinan preferensi tambahan berdasarkan kemiripan perilaku pengguna lain yang serupa.
+
+Secara keseluruhan, hasil ini menunjukkan bahwa sistem **Collaborative Filtering** telah mampu mengidentifikasi pola dan memberikan rekomendasi film yang dipersonalisasi dengan baik, tanpa memerlukan data konten dari masing-masing film secara langsung. Keunggulan pendekatan ini terletak pada kemampuannya untuk menemukan kesamaan antar pengguna dan menggunakannya sebagai dasar rekomendasi, menjadikannya solusi yang efektif untuk sistem dengan interaksi pengguna yang cukup besar.
