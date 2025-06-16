@@ -161,3 +161,25 @@ Dengan menggunakan TF-IDF Vectorizer, genre film yang awalnya berupa teks sepert
    * Fungsi .sample(21, axis=1).sample(10, axis=0) digunakan untuk menampilkan 21 genre dan 10 film secara acak agar tabel tidak terlalu besar.
    * Dari visualisasi ini terlihat bahwa tidak semua genre muncul di setiap film, dan genre yang muncul memiliki bobot yang berbeda tergantung pada seberapa umum genre tersebut di seluruh dataset.
   
+### Cosine Similarity
+Pada tahap ini, dilakukan perhitungan **cosine similarity** terhadap matriks TF-IDF yang telah dibuat sebelumnya untuk mengetahui tingkat kemiripan antar film berdasarkan genre. Fungsi cosine_similarity(tfidf_matrix) menghasilkan matriks berukuran 9724 x 9724, di mana setiap nilai menunjukkan seberapa mirip satu film dengan film lainnya dalam hal distribusi genre. Nilai tertinggi (1.0) terdapat pada diagonal utama karena setiap film pasti identik dengan dirinya sendiri, sementara nilai di luar diagonal menunjukkan tingkat kemiripan relatif antar film. Matriks tersebut kemudian dikonversi menjadi DataFrame dengan baris dan kolom berupa judul film, sehingga memudahkan analisis dan pencarian film-film yang memiliki genre serupa, misalnya untuk keperluan sistem rekomendasi berbasis konten. 
+
+atahapannya adalah sebagai berikut
+
+1. Menghitung cosine similarity pada matrix tf-idf
+
+   ![image](https://github.com/user-attachments/assets/986c9b10-6487-48e3-83e9-32b1af1edc9d)
+
+2. Membuat dataframe dari variabel cosine_sim dengan baris dan kolom berupa judul film
+
+   ![image](https://github.com/user-attachments/assets/36aa23d7-10ea-437e-a483-5ec59415a4d0)
+
+
+### Mendapatkan Rekomendasi
+Pada tahap ini, dibuat sebuah fungsi bernama movie_recommendations() yang bertujuan untuk memberikan rekomendasi film berdasarkan kemiripan genre menggunakan pendekatan **TF-IDF** dan **cosine similarity**. Fungsi ini menerima input berupa judul film, data kemiripan (dalam bentuk DataFrame dari cosine similarity), data metadata film (judul dan genre), serta jumlah film rekomendasi (k) yang ingin ditampilkan. Ketika pengguna memasukkan judul film, seperti *"Good Time (2017)"* yang diketahui memiliki genre **Crime** dan **Drama**, fungsi akan mengambil skor kemiripan dari baris yang sesuai dalam cosine_sim_df, mengurutkannya dari nilai tertinggi ke terendah (dengan mengecualikan film itu sendiri), lalu menampilkan lima film teratas yang paling mirip berdasarkan skor cosine similarity. Dengan pendekatan ini, sistem berhasil menyarankan film-film yang memiliki distribusi genre serupa, sehingga dapat digunakan dalam pengembangan sistem rekomendasi berbasis konten secara efektif.
+
+![image](https://github.com/user-attachments/assets/80586d10-dd1f-4b4e-ade5-7a7e07dc1d81)
+
+Menampilkan 5 rekomendasi film yang paling mirip dengan "Good Time (2017)" berdasarkan kemiripan genre menggunakan pendekatan TF-IDF dan cosine similarity.
+
+## Model Development dengan Collaborative Filtering
