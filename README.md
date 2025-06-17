@@ -45,6 +45,13 @@ Dataset ini berisi informasi mengenai:
 * **tags.csv** – data tag yang diberikan pengguna terhadap film
 * **links.csv** – penghubung antara movieId dan ID film dari sumber eksternal seperti IMDB dan TMDb
 
+Pada tahap ini juga dilakukan pengecekan dan penghapusan missing value pada tiap-tiap dataset
+
+![image](https://github.com/user-attachments/assets/8e4d1fe6-ccea-4a9f-b58e-34a60ad4561a)
+![image](https://github.com/user-attachments/assets/950acafa-6d52-4647-b2a0-476538a2588c)
+![image](https://github.com/user-attachments/assets/7d31e753-1c0a-42ef-9d49-1b945be2f45f)
+![image](https://github.com/user-attachments/assets/3fa1c872-fac7-4815-86f0-dac137d63848)
+
 ## Univariate Exploratory Data Analysis
 **Variabel-variabel pada MovieLens Latest Dataset adalah sebagai berikut:**
 
@@ -77,15 +84,6 @@ Data yang tersedia memang terlihat cukup sederhana, namun cukup representatif un
    * Total jumlah rating yang tercatat dalam dataset adalah **100,836**
   
 ## Data Preprocessing
-### Menggabungkan Data dengan Fitur Nama film
-mendefinisikan dataframe rating ke dalam variabel all_movie_rate
-
-![image](https://github.com/user-attachments/assets/9d50fd29-4075-4224-8dfb-df9aa2da51ce)
-
-Menggabungkan DataFrame all_movie_rate dengan DataFrame movies berdasarkan kolom movieId menggunakan metode left join, sehingga setiap baris rating akan dilengkapi dengan informasi judul film (title).
-
-![image](https://github.com/user-attachments/assets/6dc4386a-ebcd-4170-9b80-d61d773b82f2)
-
 ### Menggabungkan Data Rating dengan Fitur Genre Film
 Menggabungkan Data Rating dengan Fitur Genre Film
 
@@ -96,6 +94,11 @@ Melakukan pengelompokan data berdasarkan movieId dan title, kemudian menghitung 
 ![image](https://github.com/user-attachments/assets/e1a30364-8faf-4ac3-a8f8-bc614ca89335)
 
 ## Data Preparation
+Untuk menganalisis dan merepresentasikan genre film secara numerik, digunakan teknik **TF-IDF Vectorizer** (Term Frequency-Inverse Document Frequency). Teknik ini termasuk ke dalam metode pemrosesan teks yang digunakan untuk mengubah data kategori teks (dalam hal ini genre film) menjadi bentuk numerik yang bisa dipahami oleh mesin. Tujuannya adalah untuk mengetahui seberapa penting suatu genre dalam konteks masing-masing film, bukan hanya berdasarkan keberadaannya, tetapi juga seberapa khas genre tersebut dibandingkan dengan seluruh kumpulan film. Hasil representasi ini kemudian bisa digunakan untuk berbagai keperluan analisis lanjutan, seperti klasifikasi film, pengelompokan film berdasarkan kemiripan genre, hingga pengembangan **sistem rekomendasi berbasis konten** yang mampu menyarankan film dengan genre serupa.
+
+Dalam penerapannya, setiap genre akan diberi bobot berdasarkan dua hal: seberapa sering genre tersebut muncul dalam sebuah film (term frequency), dan seberapa umum genre itu muncul dalam seluruh koleksi film (inverse document frequency). Genre yang muncul dalam banyak film akan diberi bobot lebih rendah karena dianggap kurang informatif, sedangkan genre yang unik atau jarang muncul akan mendapatkan bobot lebih tinggi karena lebih representatif terhadap film tertentu.
+
+Dengan menggunakan TF-IDF Vectorizer, genre film yang awalnya berupa teks seperti “Action|Adventure|Sci-Fi” akan diubah menjadi vektor angka, di mana masing-masing angka menunjukkan tingkat kepentingan (bobot) dari genre tersebut terhadap filmnya. Transformasi ini memudahkan algoritma machine learning untuk memahami dan mengolah informasi genre sebagai fitur numerik, memungkinkan analisis yang lebih akurat dan berbasis data.
 ### Mengatasi Missing Value
 
 ![image](https://github.com/user-attachments/assets/2ea4ab17-9b86-4300-a655-331a5f728a55)
@@ -125,12 +128,6 @@ Membuat dictionary untuk data movie_id, movie_title, dan movie_genres
 
 ## Model Development Content Based Filtering
 ### TF-IDF Vectorizer
-Untuk menganalisis dan merepresentasikan genre film secara numerik, digunakan teknik **TF-IDF Vectorizer** (Term Frequency-Inverse Document Frequency). Teknik ini termasuk ke dalam metode pemrosesan teks yang digunakan untuk mengubah data kategori teks (dalam hal ini genre film) menjadi bentuk numerik yang bisa dipahami oleh mesin. Tujuannya adalah untuk mengetahui seberapa penting suatu genre dalam konteks masing-masing film, bukan hanya berdasarkan keberadaannya, tetapi juga seberapa khas genre tersebut dibandingkan dengan seluruh kumpulan film. Hasil representasi ini kemudian bisa digunakan untuk berbagai keperluan analisis lanjutan, seperti klasifikasi film, pengelompokan film berdasarkan kemiripan genre, hingga pengembangan **sistem rekomendasi berbasis konten** yang mampu menyarankan film dengan genre serupa.
-
-Dalam penerapannya, setiap genre akan diberi bobot berdasarkan dua hal: seberapa sering genre tersebut muncul dalam sebuah film (term frequency), dan seberapa umum genre itu muncul dalam seluruh koleksi film (inverse document frequency). Genre yang muncul dalam banyak film akan diberi bobot lebih rendah karena dianggap kurang informatif, sedangkan genre yang unik atau jarang muncul akan mendapatkan bobot lebih tinggi karena lebih representatif terhadap film tertentu.
-
-Dengan menggunakan TF-IDF Vectorizer, genre film yang awalnya berupa teks seperti “Action|Adventure|Sci-Fi” akan diubah menjadi vektor angka, di mana masing-masing angka menunjukkan tingkat kepentingan (bobot) dari genre tersebut terhadap filmnya. Transformasi ini memudahkan algoritma machine learning untuk memahami dan mengolah informasi genre sebagai fitur numerik, memungkinkan analisis yang lebih akurat dan berbasis data.
-
 1. nisialisasi dan Pelatihan TF-IDF Vectorizer
 
    ![Screenshot 2025-06-17 014149](https://github.com/user-attachments/assets/375df28c-8105-427e-a8b4-97bdd5ab3ce1)
@@ -183,9 +180,7 @@ Pada tahap ini, dibuat sebuah fungsi bernama movie_recommendations() yang bertuj
 Menampilkan 5 rekomendasi film yang paling mirip dengan "Good Time (2017)" berdasarkan kemiripan genre menggunakan pendekatan TF-IDF dan cosine similarity.
 
 ## Model Development dengan Collaborative Filtering
-### Data Preparation
 Dalam tahap awal pemrosesan data untuk sistem rekomendasi berbasis pembelajaran mesin atau deep learning, dilakukan encoding terhadap kolom **userId** dan **movieId** menjadi bentuk numerik. Hal ini diperlukan karena sebagian besar model hanya menerima input dalam format numerik atau tensor.
-
 
 1. Mengonversi userId ke dalam list unik dan Encoding userId ke indeks numerik
 
@@ -215,24 +210,26 @@ Dalam tahap awal pemrosesan data untuk sistem rekomendasi berbasis pembelajaran 
 
 Pada tahap ini, data diacak terlebih dahulu menggunakan fungsi sample(frac=1, random_state=42) untuk mengacak seluruh baris dalam DataFrame secara acak namun tetap reproducible, sehingga hasil pengacakan akan selalu sama jika kode dijalankan ulang. Selanjutnya, dibuat variabel input x yang berisi pasangan nilai numerik dari kolom user dan movie, hasil encoding sebelumnya. Sedangkan variabel target y dibuat dengan menormalisasi nilai rating ke dalam rentang 0 hingga 1 menggunakan metode *min-max normalization*. Proses ini penting agar skala rating sesuai untuk digunakan dalam model pembelajaran mesin. Setelah itu, data dibagi menjadi dua bagian, yaitu 80% untuk data latih (x_train, y_train) dan 20% untuk data validasi (x_val, y_val). Pembagian ini dilakukan dengan slicing berdasarkan jumlah baris dalam data, agar model bisa dilatih menggunakan satu bagian data dan diuji performanya pada data yang tidak dilihat selama pelatihan.
 
-### Evaluasi
-Model rekomendasi dibangun menggunakan kelas RecommenderNet, turunan dari tf.keras.Model. Tujuan utama dari arsitektur ini adalah mempelajari hubungan laten antara pengguna dan film dalam bentuk vektor berdimensi rendah yang dapat dihitung kedekatannya (similarity). Representasi ini diperoleh melalui **embedding layer**, di mana setiap pengguna dan film dipetakan ke dalam ruang fitur tersembunyi (latent space) dengan dimensi tertentu, dalam hal ini 50.
+### Modeling
+Model rekomendasi dibangun menggunakan kelas **RecommenderNet**, turunan dari `tf.keras.Model`. Tujuan utama dari arsitektur ini adalah mempelajari hubungan **laten** antara pengguna dan film dalam bentuk **vektor berdimensi rendah** yang dapat dihitung skor interaksinya. Representasi ini diperoleh melalui **embedding layer**, di mana setiap pengguna dan film dipetakan ke dalam ruang fitur tersembunyi (**latent space**) dengan dimensi tertentu, dalam hal ini **50**.
 
-Model memiliki empat layer embedding, yaitu dua untuk representasi vektor (user_embedding, movie_embedding) dan dua lainnya untuk mengakomodasi nilai **bias** tiap entitas (user_bias, movie_bias). Bias ini penting untuk menangkap kecenderungan umum dari pengguna atau film tertentu, seperti pengguna yang cenderung memberi rating tinggi, atau film yang umumnya disukai.
+Model memiliki **empat layer embedding**, yaitu dua untuk representasi vektor (`user_embedding`, `movie_embedding`) dan dua lainnya untuk mengakomodasi nilai **bias** tiap entitas (`user_bias`, `movie_bias`). Bias ini penting untuk menangkap kecenderungan umum dari pengguna atau film tertentu, seperti pengguna yang cenderung memberi rating tinggi, atau film yang umumnya disukai.
 
-Saat model dijalankan (method call()), pasangan [user_id, movie_id] digunakan untuk mengekstrak embedding masing-masing entitas. Embedding user dan film kemudian dikalikan dengan operasi **dot product** menggunakan tf.tensordot(), yang menghasilkan skor mentah interaksi antara keduanya. Skor ini kemudian disesuaikan dengan menambahkan nilai bias dari masing-masing sisi.
+Saat model dijalankan (melalui method `call()`), pasangan `[user_id, movie_id]` digunakan untuk mengekstrak embedding masing-masing entitas. Embedding pengguna dan film kemudian dikalikan menggunakan operasi **dot product** (`tf.tensordot()`), yang menghasilkan skor mentah dari interaksi antara keduanya. Skor ini kemudian disesuaikan dengan menambahkan nilai **bias** dari masing-masing sisi.
 
-Akhirnya, skor tersebut dilewatkan melalui fungsi aktivasi **sigmoid**, yang akan memetakan hasilnya ke rentang [0, 1]. Nilai inilah yang akan ditafsirkan sebagai kemungkinan bahwa pengguna akan menyukai film tersebut. Skala ini juga cocok karena sebelumnya data rating telah dinormalisasi ke dalam rentang yang sama.
+Akhirnya, skor tersebut dilewatkan melalui fungsi aktivasi **sigmoid**, yang memetakan hasilnya ke rentang \[0, 1]. Nilai ini ditafsirkan sebagai kemungkinan bahwa pengguna akan menyukai film tersebut. Skala ini sesuai karena sebelumnya data rating telah dinormalisasi ke dalam rentang yang sama.
 
 Setelah arsitektur selesai dibuat, model dikompilasi dengan konfigurasi sebagai berikut:
 
-- **Loss function**: BinaryCrossentropy. Digunakan untuk mengukur seberapa jauh prediksi dari nilai aktual dalam bentuk probabilistik. Karena skor dipetakan ke [0,1], fungsi ini cocok digunakan dalam konteks prediksi preferensi.
-- **Optimizer**: Adam dengan learning rate 0.001. Optimizer ini dipilih karena kemampuannya yang adaptif dalam mengatur laju pembelajaran, serta kestabilannya dalam konvergensi pada data yang memiliki noise atau sparcity tinggi seperti sistem rekomendasi.
-- **Metrik evaluasi**: RootMeanSquaredError (RMSE). RMSE menghitung rata-rata kesalahan prediksi dan memberikan penalti lebih besar pada kesalahan besar. Cocok digunakan untuk sistem yang memprediksi angka kontinyu seperti rating.
+* **Loss function**: `BinaryCrossentropy`. Digunakan untuk mengukur seberapa jauh prediksi dari nilai aktual dalam bentuk probabilistik. Karena skor dipetakan ke \[0,1], fungsi ini cocok untuk konteks prediksi preferensi.
+* **Optimizer**: `Adam` dengan `learning rate 0.001`. Optimizer ini dipilih karena kemampuannya yang adaptif dalam mengatur laju pembelajaran, serta kestabilannya dalam konvergensi pada data dengan sparsitas tinggi seperti sistem rekomendasi.
+* **Metrik evaluasi**: `RootMeanSquaredError (RMSE)`. RMSE menghitung rata-rata kesalahan prediksi dan memberikan penalti lebih besar pada kesalahan besar. Cocok digunakan untuk sistem yang memprediksi nilai kontinyu seperti rating.
 
-Model kemudian dilatih selama **25 epoch** dengan **batch size 32**, artinya dalam setiap iterasi model memproses 32 sampel sekaligus. Pengaturan ini memberikan efisiensi yang baik antara kecepatan komputasi dan kualitas pembelajaran. Epoch sebanyak 25 kali dianggap cukup untuk membiarkan model menemukan pola dalam data tanpa terlalu lama dilatih, yang bisa menimbulkan **overfitting**.
+Model kemudian dilatih selama **25 epoch** dengan **batch size 32**, artinya dalam setiap iterasi model memproses 32 sampel sekaligus. Pengaturan ini memberikan efisiensi yang baik antara kecepatan komputasi dan kualitas pembelajaran. Jumlah epoch sebanyak 25 dianggap cukup untuk membiarkan model menemukan pola dalam data tanpa terlalu lama dilatih, yang dapat menimbulkan **overfitting**.
 
-Selama proses pelatihan, performa model pada data latih dan data validasi dievaluasi setiap epoch menggunakan RMSE. Nilai RMSE yang menurun secara stabil pada kedua dataset menunjukkan bahwa model belajar dengan baik. Visualisasi hasil pelatihan (plot RMSE) memberikan gambaran apakah model mengalami penurunan error secara bertahap, serta apakah terdapat jarak yang besar antara data train dan validation yang bisa mengindikasikan overfitting.
+Selama proses pelatihan, performa model pada data latih dan data validasi dievaluasi setiap epoch menggunakan RMSE. Nilai RMSE yang menurun secara stabil pada kedua dataset menunjukkan bahwa model belajar dengan baik. Visualisasi hasil pelatihan (plot RMSE) memberikan gambaran apakah model mengalami penurunan error secara bertahap, serta apakah terdapat jarak yang besar antara data train dan validation yang bisa mengindikasikan **overfitting**.
+
+### Evaluation
 
 ![download (6)](https://github.com/user-attachments/assets/2af791a9-5982-4237-8f36-fd2c8175f507)
 
@@ -240,7 +237,7 @@ Grafik menunjukkan bahwa nilai RMSE pada data training terus menurun seiring ber
 
 ### Mendapatkan Rekomendasi Film
 
-Pada tahap ini, dilakukan proses pembuatan rekomendasi film untuk satu pengguna secara acak dengan terlebih dahulu mengidentifikasi film yang **belum ditonton** oleh pengguna tersebut. Langkah pertama dimulai dengan memilih satu `userId` secara acak dari dataset `df`, kemudian sistem mencari daftar `movieId` yang **belum pernah ditonton** oleh pengguna tersebut dengan menggunakan operator bitwise `~` untuk mengecualikan film yang sudah pernah dinilai. Setelah itu, hanya ID film yang sudah melalui proses encoding sebelumnya yang dipertahankan agar sesuai dengan struktur input model. Setiap `movieId` yang belum ditonton tersebut kemudian dipasangkan dengan `userId` yang telah di-encode, membentuk array dua kolom (`user`, `movie`) untuk prediksi. Model yang sudah dilatih sebelumnya digunakan untuk memprediksi rating dari semua kombinasi user-movie ini, lalu hasil prediksi diurutkan untuk mendapatkan 10 film dengan skor prediksi tertinggi. Sebelum menampilkan rekomendasi, sistem juga menampilkan 5 film dengan rating tertinggi yang sudah pernah ditonton oleh user tersebut sebagai referensi. Terakhir, sistem mencetak daftar 10 rekomendasi film berdasarkan prediksi skor tertinggi, lengkap dengan judul dan genre, dari dataframe `movie_df`. Proses ini mencerminkan pendekatan sistem rekomendasi berbasis prediksi skor individual untuk item yang belum dilihat pengguna.
+Pada tahap ini, dilakukan proses pembuatan rekomendasi film untuk satu pengguna secara acak dengan terlebih dahulu mengidentifikasi film yang **belum ditonton** oleh pengguna tersebut. Langkah pertama dimulai dengan memilih satu userId secara acak dari dataset df, kemudian sistem mencari daftar movieId yang **belum pernah ditonton** oleh pengguna tersebut dengan menggunakan operator bitwise ~ untuk mengecualikan film yang sudah pernah dinilai. Setelah itu, hanya ID film yang sudah melalui proses encoding sebelumnya yang dipertahankan agar sesuai dengan struktur input model. Setiap movieId yang belum ditonton tersebut kemudian dipasangkan dengan userId yang telah di-encode, membentuk array dua kolom (user, movie) untuk prediksi. Model yang sudah dilatih sebelumnya digunakan untuk memprediksi rating dari semua kombinasi user-movie ini, lalu hasil prediksi diurutkan untuk mendapatkan 10 film dengan skor prediksi tertinggi. Sebelum menampilkan rekomendasi, sistem juga menampilkan 5 film dengan rating tertinggi yang sudah pernah ditonton oleh user tersebut sebagai referensi. Terakhir, sistem mencetak daftar 10 rekomendasi film berdasarkan prediksi skor tertinggi, lengkap dengan judul dan genre, dari dataframe movie_df. Proses ini mencerminkan pendekatan sistem rekomendasi berbasis prediksi skor individual untuk item yang belum dilihat pengguna.
 
 ![image](https://github.com/user-attachments/assets/407db68f-3682-43b8-9650-d2346e7a822c)
 
