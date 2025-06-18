@@ -88,11 +88,11 @@ Melakukan pengelompokan data berdasarkan movieId dan title, kemudian menghitung 
 ![image](https://github.com/user-attachments/assets/e1a30364-8faf-4ac3-a8f8-bc614ca89335)
 
 ## Data Preparation
-Untuk menganalisis dan merepresentasikan genre film secara numerik, digunakan teknik TF-IDF Vectorizer (Term Frequency-Inverse Document Frequency). Teknik ini termasuk ke dalam metode pemrosesan teks yang digunakan untuk mengubah data kategori teks (dalam hal ini genre film) menjadi bentuk numerik yang bisa dipahami oleh mesin. Tujuannya adalah untuk mengetahui seberapa penting suatu genre dalam konteks masing-masing film, bukan hanya berdasarkan keberadaannya, tetapi juga seberapa khas genre tersebut dibandingkan dengan seluruh kumpulan film. Genre yang sering muncul dalam banyak film akan diberi bobot lebih rendah karena dianggap kurang informatif, sedangkan genre yang unik atau jarang muncul akan memiliki bobot lebih tinggi karena dianggap lebih representatif.
+Untuk menganalisis dan merepresentasikan genre film secara numerik, digunakan teknik TF-IDF Vectorizer (Term Frequency-Inverse Document Frequency). Teknik ini termasuk dalam metode pemrosesan teks yang digunakan untuk mengubah data kategori teks (dalam hal ini genre film) menjadi bentuk numerik yang dapat diproses oleh mesin. Tujuannya adalah untuk mengetahui seberapa penting suatu genre dalam konteks masing-masing film—bukan hanya berdasarkan keberadaannya, tetapi juga berdasarkan kekhasannya dibandingkan dengan seluruh kumpulan film. Genre yang umum dan sering muncul dalam banyak film akan diberi bobot lebih rendah karena dianggap kurang informatif, sementara genre yang langka atau unik akan mendapat bobot lebih tinggi karena lebih representatif.
 
-Dalam implementasinya, data genre seperti “Action|Adventure|Sci-Fi” terlebih dahulu diproses dengan mengganti tanda pemisah (|) menjadi spasi agar sesuai dengan format masukan TF-IDF. Kemudian, TF-IDF Vectorizer akan mengubah teks genre tersebut menjadi vektor numerik, di mana setiap elemen dalam vektor menunjukkan bobot pentingnya genre tertentu terhadap film tersebut. Representasi numerik ini selanjutnya digunakan sebagai fitur konten dalam pengembangan sistem rekomendasi berbasis konten, karena memungkinkan algoritma machine learning menghitung kemiripan antar film berdasarkan genre.
+Dalam implementasinya, data genre seperti “Action|Adventure|Sci-Fi” terlebih dahulu diproses dengan mengganti tanda pemisah | menjadi spasi agar sesuai dengan format masukan TF-IDF Vectorizer. Setelah itu, TF-IDF Vectorizer akan mengubah teks genre menjadi vektor numerik, di mana setiap elemen mewakili bobot kepentingan genre tertentu terhadap suatu film. Representasi numerik ini digunakan sebagai fitur konten dalam pengembangan sistem rekomendasi berbasis konten.
 
-Selain itu, pada tahap data preparation, dilakukan beberapa teknik penting lain yang mendukung pemodelan. Pertama, dilakukan encoding pada kolom userId dan movieId untuk mengubah data kategorikal menjadi bentuk numerik yang dapat diterima oleh model. Proses ini menggunakan fungsi LabelEncoder dari pustaka sklearn. Selanjutnya, data dibagi menjadi dua bagian, yaitu data latih (training) dan data validasi (validation), agar dapat mengevaluasi kinerja model secara objektif dan mencegah overfitting. Pembagian ini menggunakan fungsi train_test_split.
+Selain itu, dilakukan juga tahap data preparation untuk menyiapkan data yang akan digunakan oleh model. Proses ini mencakup Encoding userId dan movieId secara manual menggunakan mapping dictionary. Setiap nilai unik dari userId dan movieId dipetakan ke angka yang merepresentasikan ID numerik. Hal ini dilakukan agar data kategorikal tersebut dapat diproses oleh model pembelajaran mesin. Pembagian data ke dalam data latih (training) dan data validasi (validation) dilakukan menggunakan metode slicing manual. Data diacak terlebih dahulu (shuffled), lalu dibagi berdasarkan indeks ke dalam dua bagian: sebagian besar digunakan untuk pelatihan, dan sisanya untuk validasi. Teknik ini menggantikan penggunaan fungsi train_test_split.
 
 ### Mengatasi Missing Value
 
@@ -228,7 +228,19 @@ Evaluasi Kinerja Model dengan Classification Report
 
 ![image](https://github.com/user-attachments/assets/ff21cb12-7374-446d-9ed4-816ef7b24fa9)
 
-Berdasarkan output tersebut Model memiliki akurasi sebesar 81%, yang berarti dari total 20.168 data validasi, sekitar 81% berhasil diklasifikasikan dengan benar.
+Interpretasi singkat:
+* Model cukup baik dalam mengenali sentimen positif (Precision & Recall > 0.85).
+* Namun masih lemah dalam mengklasifikasikan sentimen negatif, dengan F1-Score hanya 0.48.
+* Macro avg menunjukkan ketidakseimbangan performa antar kelas.
+* Accuracy 81%, tetapi tidak cukup untuk menyimpulkan bahwa model baik tanpa memperhatikan distribusi kelas.
+
+Agar evaluasi sistem content-based recommendation menjadi terukur, kita menggunakan metrik Precision@K dan Recall@K, yang didefinisikan sebagai berikut:
+
+![image](https://github.com/user-attachments/assets/450e93ac-7de9-4e7b-a62f-35037724858d)
+
+Contoh Perhitungan Precision@K:
+Misalnya Sistem merekomendasikan 5 film teratas (K = 5). Dari 5 rekomendasi tersebut, 4 film memiliki genre yang sama/serupa dengan film yang dicari (misal sama-sama "Sci-Fi"). Maka Precision@5= 4/5 =0.8
+Artinya, 80% rekomendasi berada dalam genre yang sesuai dengan preferensi pengguna (berdasarkan item acuan).
 
 ![download (6)](https://github.com/user-attachments/assets/2af791a9-5982-4237-8f36-fd2c8175f507)
 
